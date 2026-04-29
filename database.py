@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 # For development (SQLite)
-SQLALCHEMY_DATABASE_URL = "sqlite:///./todos.db"
+SQLALCHEMY_DATABASE_URL = "sqlite:///./crypto.db"
 
 # For production (PostgreSQL example)
 # SQLALCHEMY_DATABASE_URL = "postgresql://user:password@localhost/dbname"
