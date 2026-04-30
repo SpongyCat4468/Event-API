@@ -22,9 +22,9 @@ def seed_data(db: Session):
     """Populate the DB with default teams and cryptos if empty."""
     if db.query(models.Team).count() == 0:
         teams = [
-            models.Team(name="Alpha", balance=10000.0),
-            models.Team(name="Beta",  balance=10000.0),
-            models.Team(name="Gamma", balance=10000.0),
+            models.Team(name="Zeroth", balance=10000.0),   # 零小
+            models.Team(name="First",  balance=10000.0), # 一小
+            models.Team(name="Second", balance=10000.0), # 二小
         ]
         db.add_all(teams)
 
