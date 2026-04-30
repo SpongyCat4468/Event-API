@@ -1,7 +1,0 @@
-fastapi
-uvicorn
-sqlalchemy
-pydantic
-email-validator
-python-multipart
-pydantic[email]
