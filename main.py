@@ -53,6 +53,62 @@ def on_startup():
 # ────────────────────────────────────────────────────────────────────────────
 # Crypto endpoints
 # ────────────────────────────────────────────────────────────────────────────
+@app.post("/teams/{team_name}/reset/balance", response_model=schemas.TeamDetailOut, tags=["Teams"])
+def reset_team_balance(
+    team_name: str, 
+    balance: float, 
+    db: Session = Depends(get_db)
+):
+    """
+    Manually set a team's balance.
+    """
+    team = db.query(models.Team).filter(
+        models.Team.name == team_name.capitalize()
+    ).first()
+    if not team:
+        raise HTTPException(status_code=404, detail=f"Team '{team_name}' not found")
+
+    team.balance = balance
+
+    db.commit()
+    db.refresh(team)
+    return _build_team_detail(team, db)
+
+@app.post("/teams/{team_name}/reset/holdings", response_model=schemas.TeamDetailOut, tags=["Teams"])
+def reset_team_holdings(
+    team_name: str, 
+    holdings: dict[str, float], 
+    db: Session = Depends(get_db)
+):
+    """
+    Manually set a team's holdings.
+    'holdings' should be a dictionary of {symbol: quantity}.
+    """
+    team = db.query(models.Team).filter(
+        models.Team.name == team_name.capitalize()
+    ).first()
+    if not team:
+        raise HTTPException(status_code=404, detail=f"Team '{team_name}' not found")
+
+    # Clear existing holdings
+    db.query(models.Holding).filter(models.Holding.team_id == team.id).delete()
+
+    # Add new holdings
+    for symbol, quantity in holdings.items():
+        crypto = db.query(models.Crypto).filter(models.Crypto.symbol == symbol.upper()).first()
+        if not crypto:
+            raise HTTPException(status_code=404, detail=f"Crypto '{symbol}' not found")
+        
+        new_holding = models.Holding(
+            team_id=team.id,
+            crypto_id=crypto.id,
+            quantity=quantity
+        )
+        db.add(new_holding)
+
+    db.commit()
+    db.refresh(team)
+    return _build_team_detail(team, db)
 
 @app.get("/cryptos", response_model=list[schemas.CryptoOut], tags=["Crypto"])
 def list_cryptos(db: Session = Depends(get_db)):
