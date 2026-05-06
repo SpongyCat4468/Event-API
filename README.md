@@ -1,124 +1,186 @@
-# Crypto Trading Simulation API
+# 活動交易所 API
 
-A FastAPI + SQLite backend for running a cryptocurrency trading simulation in Discord bots.
+FastAPI + SQLite + Discord Bot 的三隊虛擬貨幣交易系統。
 
-## Stack
-
-| Layer | Choice |
-|---|---|
-| Framework | FastAPI |
-| Database | SQLite (via SQLAlchemy ORM) |
-| Validation | Pydantic v2 |
-| Server | Uvicorn |
-
-SQLite was chosen over a separate DB server for simplicity — perfect for a Discord bot running on a single machine. If you ever need concurrent writes from multiple processes, swap the `DATABASE_URL` in `database.py` to PostgreSQL.
-
----
-
-## Setup
+## 啟動後端與前端
 
 ```bash
 pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
 
-Interactive docs available at: http://localhost:8000/docs
+前端即時看板：
 
----
-
-## Default Data
-
-On first startup the API seeds:
-
-**Teams** (each starting with $10,000 USD):
-- Alpha, Beta, Gamma
-
-**Cryptocurrencies**:
-- BTC (Bitcoin) — $65,000
-- ETH (Ethereum) — $3,200
-- SOL (Solana) — $150
-
----
-
-## API Reference
-
-### Crypto
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/cryptos` | List all cryptos with current prices |
-| GET | `/cryptos/{symbol}` | Get a single crypto (e.g. `/cryptos/BTC`) |
-| GET | `/cryptos/{symbol}/history` | Full price history for a crypto |
-| PATCH | `/cryptos/{symbol}/price` | Update price (use in your simulation loop) |
-
-**Update price example:**
-```json
-PATCH /cryptos/BTC/price
-{ "price": 67500.0 }
+```text
+http://127.0.0.1:8000/
 ```
 
----
+API 文件：
 
-### Teams
+```text
+http://127.0.0.1:8000/docs
+```
 
-| Method | Endpoint | Description |
+## Discord Bot
+
+```bash
+export DISCORD_BOT_TOKEN="你的 Discord Bot Token"
+export API_BASE_URL="http://127.0.0.1:8000"
+export ADMIN_TOKEN="jmec-staff"
+export DISCORD_GUILD_ID="你的 Discord 伺服器 ID"
+python discord_bot.py
+```
+
+如果 FastAPI 已部署到線上，請把 `API_BASE_URL` 改成你的後端網址，例如：
+
+```bash
+export API_BASE_URL="https://jmec-event-api.onrender.com"
+```
+
+網址最後不用加 `/`。
+
+## Render / Railway 部署
+
+建議啟動指令：
+
+```bash
+gunicorn main:app -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
+```
+
+這個專案也已包含 `Procfile`：
+
+```text
+web: gunicorn main:app -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
+```
+
+環境變數建議：
+
+| 變數 | 用途 | 範例 |
 |---|---|---|
-| GET | `/teams` | List all teams and their USD balances |
-| GET | `/teams/{team_name}` | Team detail: balance, holdings, portfolio value |
-| GET | `/teams/{team_name}/trades` | Full trade history for a team |
+| `ADMIN_TOKEN` | 上帝模式 API token | `jmec-staff-secret` |
+| `ALLOWED_ORIGINS` | 允許前端或 Bot 呼叫 API 的來源，預設 `*` | `*` 或 `https://你的前端網址` |
+| `SQLITE_PATH` | SQLite 檔案位置，建議設到 persistent disk | `/var/data/crypto_sim.db` |
+| `DATABASE_URL` | 進階 DB URL；有設定時會覆蓋 `SQLITE_PATH` | `sqlite:////var/data/crypto_sim.db` |
 
----
+Render 若使用 persistent disk，可以把 disk 掛在 `/var/data`，並設定：
 
-### Trading
+```text
+SQLITE_PATH=/var/data/crypto_sim.db
+```
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/trade/buy` | Buy crypto for a team |
-| POST | `/trade/sell` | Sell crypto for a team |
+Railway 若使用 Volume，程式會自動讀取 `RAILWAY_VOLUME_MOUNT_PATH`，也可以明確設定：
 
-**Buy/Sell request body:**
+```text
+SQLITE_PATH=/data/crypto_sim.db
+```
+
+沒有 persistent disk 時，SQLite 仍然可以讀寫，但雲端服務重啟或重新部署後資料可能消失。
+
+Windows PowerShell：
+
+```powershell
+$env:DISCORD_BOT_TOKEN="你的 Discord Bot Token"
+$env:API_BASE_URL="http://127.0.0.1:8000"
+$env:ADMIN_TOKEN="jmec-staff"
+$env:DISCORD_GUILD_ID="你的 Discord 伺服器 ID"
+python discord_bot.py
+```
+
+## 預設資料
+
+隊伍：
+
+- Zeroth
+- First
+- Second
+
+虛擬貨幣：
+
+- INFOR（建中資訊社）
+- CMIOC（景美電資社）
+- IZCC（四社聯合）
+
+## Discord Slash Commands
+
+| 指令 | 說明 |
+|---|---|
+| `/price` | 查看即時幣價與最新新聞 |
+| `/buy` | 小隊買入虛擬貨幣 |
+| `/sell` | 小隊賣出虛擬貨幣 |
+| `/balance` | 查看小隊資產 |
+| `/leaderboard` | 查看排行榜 |
+| `/news` | 查看新聞 |
+| `/start_game` | 設定零小、一小、二小本金並重置遊戲 |
+| `/end_game` | 結束遊戲並進入結算 |
+| `/team_balance` | 對小隊現金執行 set/multiply/add/remove |
+| `/team_holding` | 對小隊持幣執行 set/multiply/add/remove |
+| `/pump` | 工作人員觸發利多暴漲 |
+| `/crash` | 工作人員觸發市場崩盤 |
+
+管理指令需要 Discord Administrator 或 Manage Server 權限，且 Bot 端 `ADMIN_TOKEN` 必須與後端一致。
+
+## 主要 API
+
+### 價格
+
+```http
+GET /price
+```
+
+回傳三種幣目前價格、最近價格歷史、最新新聞。前端每 3 秒會呼叫一次。
+
+### 統一交易
+
+```http
+POST /trade
+```
+
 ```json
 {
-  "team_name": "Alpha",
-  "crypto_symbol": "BTC",
-  "quantity": 0.5
+  "team_name": "Zeroth",
+  "crypto_symbol": "INFOR",
+  "quantity": 0.1,
+  "trade_type": "buy"
 }
 ```
 
----
+`trade_type` 可用 `buy` 或 `sell`。
 
-### Leaderboard
+舊版端點仍保留：
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/leaderboard` | All teams sorted by total portfolio value |
+- `POST /trade/buy`
+- `POST /trade/sell`
 
----
+### 上帝模式
 
-## Discord Bot Integration Tips
-
-### Price simulation loop
-Call `PATCH /cryptos/{symbol}/price` on a timer (e.g. every 60s) with randomly fluctuating prices. Price history is recorded automatically on every update.
-
-### Example commands to map
-| Discord command | API call |
-|---|---|
-| `!balance Alpha` | `GET /teams/Alpha` |
-| `!buy Alpha BTC 0.1` | `POST /trade/buy` |
-| `!sell Beta ETH 2` | `POST /trade/sell` |
-| `!price BTC` | `GET /cryptos/BTC` |
-| `!chart SOL` | `GET /cryptos/SOL/history` |
-| `!leaderboard` | `GET /leaderboard` |
-| `!history Gamma` | `GET /teams/Gamma/trades` |
-
----
-
-## Database Schema
-
+```http
+POST /admin/market-event
+X-Admin-Token: jmec-staff
 ```
-teams           — id, name, balance
-cryptos         — id, symbol, name, current_price
-price_history   — id, crypto_id, price, recorded_at
-trades          — id, team_id, crypto_id, trade_type, quantity, price_at_trade, total_value, executed_at
-holdings        — id, team_id, crypto_id, quantity
+
+```json
+{
+  "event_type": "pump",
+  "symbol": "INFOR",
+  "percent": 5,
+  "headline": "建中資訊社社員在 APCS 取得好成績"
+}
 ```
+
+`event_type` 可用：
+
+- `pump`
+- `crash`
+
+`symbol` 可填 `INFOR`、`CMIOC`、`IZCC`，或留空套用全市場。舊代號 `BTC`、`ETH`、`SOL` 仍會自動對應到新代號，方便舊版 Bot 暫時過渡。
+
+## 市場更新邏輯
+
+後端啟動後會每 10 秒自動更新價格，公式包含：
+
+- Trend：每個幣種的基礎趨勢
+- Volatility：隨機波動
+- Impact：買賣交易形成的買壓或賣壓
+- News/Event：隨機新聞或上帝模式事件；自動新聞會造成 5% 到 10% 的漲跌幅
+
+每次更新都會寫入 `price_history`，前端折線圖會從 `/price` 的 history 即時繪製。

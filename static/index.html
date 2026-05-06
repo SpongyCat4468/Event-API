@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CMIOC x INFOR | Live Market</title>
+    <link rel="stylesheet" href="/static/style.css?v=20260504-1242" />
+  </head>
+  <body>
+    <div id="frontPageOverlay" class="frontpage-overlay" aria-hidden="true" hidden>
+      <div class="frontpage-paper">
+        <div class="frontpage-kicker">LIVE</div>
+        <div class="frontpage-title">[即時新聞]</div>
+        <div id="frontPageMeta" class="frontpage-meta">市場快訊</div>
+        <div id="frontPageHeadline" class="frontpage-headline"></div>
+      </div>
+    </div>
+
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">LIVE MARKET</p>
+        <h1>建構回憶，景致青春</h1>
+        <p class="brandline">CMIOC × INFOR</p>
+      </div>
+      <div class="connection">
+        <span class="pulse" aria-hidden="true"></span>
+        <span id="apiStatus">連線中</span>
+      </div>
+    </header>
+
+    <section id="featuredNewsPanel" class="featured-news-panel is-empty" aria-label="即時新聞" hidden>
+      <div class="featured-news-label">[即時新聞]</div>
+      <div class="featured-news-body">
+        <div id="featuredNewsMeta" class="featured-news-meta"></div>
+        <div id="featuredNewsText" class="featured-news-text"></div>
+      </div>
+    </section>
+
+    <main class="layout">
+      <section class="market">
+        <div id="tickerGrid" class="ticker-grid"></div>
+
+        <div class="chart-panel">
+          <div class="chart-header">
+            <div>
+              <p class="eyebrow">REAL TIME</p>
+              <h2>市場價格走勢</h2>
+            </div>
+            <time id="serverTime">--:--:--</time>
+          </div>
+          <canvas id="priceChart" aria-label="三種虛擬貨幣即時折線圖"></canvas>
+        </div>
+      </section>
+    </main>
+
+    <script src="/static/app.js?v=20260504-1242"></script>
+  </body>
+</html>

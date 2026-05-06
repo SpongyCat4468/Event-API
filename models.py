@@ -25,7 +25,7 @@ class Crypto(Base):
     __tablename__ = "cryptos"
 
     id = Column(Integer, primary_key=True, index=True)
-    symbol = Column(String, unique=True, nullable=False)  # e.g. BTC, ETH, SOL
+    symbol = Column(String, unique=True, nullable=False)  # e.g. INFOR, CMIOC, IZCC
     name = Column(String, nullable=False)
     current_price = Column(Float, nullable=False)
 
